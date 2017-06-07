@@ -1,0 +1,110 @@
+---
+title: "Prediction Assignment: Weightlifting Form Classification"
+output: html_document
+---
+
+## Synopsis
+
+Feature selection, model selection, and model training was performed on a data set provided by Groupware\@LES. The data set contains readings from positional tracking and gyroscopic tracking instruments placed on various parts of a weightlifter's arm and equipment. The data set was originally used as part of a research project to classify a weightlifter's exercise as correct movement or a specified type of incorrect movement. The original research project analyzed data over a window of time as input for classification. In this assignment the same classification problem was attempted, but on classifications using single observations. The original data set was reduced to a smaller set of features for model training and then subset into a smaller training set and a validation set. Random forests were trained and cross validated with K-fold methodology. The final model had an in sample error or 0% and a conservatively estimated out of sample error of 0.0058%, based on evaluation of cross validation accuracy and validation testing accuracy.
+
+## Data Details
+
+The data used in this assignment comes from a Groupware\@LES Project, specifically "Qualitative Activity Recognition of Weight Lifting Exercises" by Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H.
+
+The paper is viewable at: http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf
+
+The data includes 160 variables, 19622 training observations, and 20 test observations (used for scoring the model in a quiz assignment). The variables represent various components of sensing data from specific regions of the body and workout equipment (The upper arm, forearm, waist, and dumbbell) as well as summary statistics information for sensing data over windows of time. Additionally, variables also include time stamps, user name, and time window numbers.
+
+
+## Feature and Model Selection
+
+Time stamp and time window variables (raw_timestamp_1, raw_timestamp_2, cvtd_timestamp, new_window, and num_window) were all removed, as it was assumed time data would have little value on per observation classifications. Identifier variables (X and user_name) were removed, as X simply referred to row number and user_name merely gave the name of a participant (there was also an additional concern that particular participants may have had unique movement characteristics that could have lead to overfitting). Some variables had NA values for all observations and were removed as they had no data to offer. Summary statistic variables (variables containing standard deviation, average, and variance) only had values for observations at the end of specific time windows and otherwise contained NAs, as such they were removed given that the variable could not be counted on in a per observation classification scheme nor would their useable values contain information only pertaining to the single observation that contained them.
+
+```{r, echo=FALSE, cache=TRUE, fig.width = 8, fig.height = 8}
+# load data
+pmltest <- read.csv("pml-testing.csv", na.strings = "#DIV/0!")
+pmltrain <- read.csv("pml-training.csv", na.strings = "#DIV/0!")
+
+# make copy of training set that has NA correctly marked
+pmlna <- pmltrain
+pmlna[pmlna=="NA"] <- NA
+
+# trim data to remove columns with majority NAs
+pmltrimmed <- pmlna[, colSums(is.na(pmlna)) < 100]
+
+# trim unimportant data (names, time stamps, etc)
+pmltrimmed <- pmltrimmed[c(8:60)]
+
+# correlation table
+pmlcor <- cor(pmltrimmed[1:52])
+
+# display heatmap
+heatmap(pmlcor, main = "Selected Features Correlation Heat Map")
+```
+
+The remaining features were compared by a correlation matrix. A heatmap was used to visualize the large correlation matrix (as can be seen in the heatmap above). Unfortunately, while some patterns did emerge from the heatmap, it was unclear from the visualization if any features should be removed based on this data and thus no other features were excluded.
+
+After feature removal/selection 53 variables remained in the data set. Given the classification problem and number of features a random forest approach was selected. The random forest function was set to include 3 repeats (returning the highest accuracy random forest, of three constructed, based on average accuracy determined via cross-validation).
+
+## Data Slicing and Cross-Validation Methodology
+
+The training set was split into two subsets, one to be used as a new training set and the second to be used as a validation set. Splitting was done on the "classe" variable to ensure even distribution of classification data. The new training set included roughly 70% of the original training data and the validation set the remaining approximate 30%.
+
+A K-fold cross validation technique was selected for use during training. In the control settings for the random forest function a K value of 10 was set. Output data from the function included cross validated accuracy for trained models (reported in next section).
+
+## Training and Classification Results
+
+```{r, echo=FALSE, eval=FALSE}
+# Split Data
+inTrain <- createDataPartition(y=pmltrimmed$classe, p=0.7, list=FALSE)
+training <- pmltrimmed[inTrain,]
+testing <- pmltrimmed[-inTrain,]
+
+# build random forest
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="random", verboseIter = TRUE)
+pmlmodel <- train(classe ~ ., data = training, method="rf", prox=TRUE, trControl = control)
+
+# create in sample confusion matrix
+InSamplePred <- predict(pmlmodel, training)
+table(InSamplePred, training$classe)
+
+# create out of sample confusion matrix
+OutOfSamplePred <- predict(pmlmodel, testing)
+table(OutOfSamplePred, testing$classe)
+```
+
+```{r, echo=FALSE, cache=TRUE}
+# Loading data from version of model, and split data, used in assignment (was created without setting a specific seed)
+
+# Load Split Data
+loadedTraining <- read.csv("training.csv")
+loadedTesting <- read.csv("testing.csv")
+
+# Load Predictions
+InSamplePred <- read.csv("inSample.csv")
+InSamplePred <- unlist(InSamplePred[2])
+OutOfSamplePred <- read.csv("outSample.csv")
+OutOfSamplePred <- unlist(OutOfSamplePred[2])
+```
+
+The random forest function was set to use "repeatedcv" as the method in the control settings. "repeatedcv" allows for both K-fold cross validation as well as repeated training sessions. The final model returned is the model with best cross validated accuracy amongst those trained. The number of repeats was set to 3.
+
+Total training time took approximately 6 hours. The three random forests constructed had cross validated accuracies of 0.9942%, 0.9937%, and 0.9936% with kappa values of 0.9926, 0.9921, and 0.9919. The returned final model was the model with cross validated accuracy of 0.9942%.
+
+The final model was first evaluated for in sample error by classifying on the training data set (specifically the subset of the original training data, that was used to train the model). The in sample error was 0% (an accuracy of 100%). The confusion matrix is presented below.
+
+```{r, echo=FALSE, cache=TRUE, comment=""}
+# Display in sample confusion matrix
+table(InSamplePred, loadedTraining$classe)
+```
+
+The final model was then used to predict on the validation data set to make another determination of out of sample error (to compare with the cross validated accuracy). The out of sample error was 0.0022% (13 errors out of 5885 for an accuracy of 0.9978%). The confusion matrix is presented below. 
+
+```{r, echo=FALSE, cache=TRUE, comment=""}
+# Display validation sample confusion matrix
+table(OutOfSamplePred, loadedTesting$classe)
+```
+
+## Conclusions
+
+The in sample error of 0% certainly raises some concerns over possible overfitting. However, a cross validation accuracy of 0.9942% and a validation test accuracy of 0.9978% is strong evidence for low out of sample error. A reasonable conservative estimate for out of sample error would be 0.0058% (1 - 0.9942%), based on the lower of the two determined accuracies in cross validation and testing.
