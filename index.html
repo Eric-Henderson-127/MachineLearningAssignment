@@ -122,7 +122,7 @@ $(document).ready(function () {
 
 <div id="synopsis" class="section level2">
 <h2>Synopsis</h2>
-<p>Feature selection, model selection, and model training was performed on a data set provided by Groupware@LES. The data set contains readings from positional tracking and gyroscopic tracking instruments placed on various parts of a weightlifter’s arm and equipment. The data set was originally used as part of a research project to classify a weightlifter’s exercise as correct movement or a specified type of incorrect movement. The original research project analyzed data over a window of time as input for classification. In this assignment the same classification problem was attempted, but on classifications using single observations. The original data set was reduced to a smaller set of features for model training and then subset into a smaller training set and a validation set. Random forests were trained and cross validated with K-fold methodology. The final model had an in sample error or 0% and a conservatively estimated out of sample error of 0.0058%, based on evaluation of cross validation accuracy and validation testing accuracy.</p>
+<p>Feature selection, model selection, and model training was performed on a data set provided by Groupware@LES. The data set contains readings from positional tracking and gyroscopic tracking instruments placed on various parts of a weightlifter’s arm and equipment. The data set was originally used as part of a research project to classify a weightlifter’s exercise as correct movement or a specified type of incorrect movement. The original research project analyzed data over a window of time as input for classification. In this assignment the same classification problem was attempted, but on classifications using single observations. The original data set was reduced to a smaller set of features for model training and then subset into a smaller training set and a validation set. Random forests were trained and cross validated with K-fold methodology. The final model had an in sample error or 0.0% and a conservatively estimated out of sample error of 0.58%, based on evaluation of cross validation accuracy and validation testing accuracy.</p>
 </div>
 <div id="data-details" class="section level2">
 <h2>Data Details</h2>
@@ -145,8 +145,8 @@ $(document).ready(function () {
 <div id="training-and-classification-results" class="section level2">
 <h2>Training and Classification Results</h2>
 <p>The random forest function was set to use “repeatedcv” as the method in the control settings. “repeatedcv” allows for both K-fold cross validation as well as repeated training sessions. The final model returned is the model with best cross validated accuracy amongst those trained. The number of repeats was set to 3.</p>
-<p>Total training time took approximately 6 hours. The three random forests constructed had cross validated accuracies of 0.9942%, 0.9937%, and 0.9936% with kappa values of 0.9926, 0.9921, and 0.9919. The returned final model was the model with cross validated accuracy of 0.9942%.</p>
-<p>The final model was first evaluated for in sample error by classifying on the training data set (specifically the subset of the original training data, that was used to train the model). The in sample error was 0% (an accuracy of 100%). The confusion matrix is presented below.</p>
+<p>Total training time took approximately 6 hours. The three random forests constructed had cross validated accuracies of 99.42%, 99.37%, and 99.36% with kappa values of 0.9926, 0.9921, and 0.9919. The returned final model was the model with cross validated accuracy of 99.42%.</p>
+<p>The final model was first evaluated for in sample error by classifying on the training data set (specifically the subset of the original training data, that was used to train the model). The in sample error was 0.0% (an accuracy of 100%). The confusion matrix is presented below.</p>
 <pre><code>            
 InSamplePred    A    B    C    D    E
            A 3906    0    0    0    0
@@ -154,7 +154,7 @@ InSamplePred    A    B    C    D    E
            C    0    0 2396    0    0
            D    0    0    0 2252    0
            E    0    0    0    0 2525</code></pre>
-<p>The final model was then used to predict on the validation data set to make another determination of out of sample error (to compare with the cross validated accuracy). The out of sample error was 0.0022% (13 errors out of 5885 for an accuracy of 0.9978%). The confusion matrix is presented below.</p>
+<p>The final model was then used to predict on the validation data set to make another determination of out of sample error (to compare with the cross validated accuracy). The out of sample error was 0.22% (13 errors out of 5885 for an accuracy of 99.78%). The confusion matrix is presented below.</p>
 <pre><code>               
 OutOfSamplePred    A    B    C    D    E
               A 1674    2    0    0    0
@@ -165,7 +165,7 @@ OutOfSamplePred    A    B    C    D    E
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
-<p>The in sample error of 0% certainly raises some concerns over possible overfitting. However, a cross validation accuracy of 0.9942% and a validation test accuracy of 0.9978% is strong evidence for low out of sample error. A reasonable conservative estimate for out of sample error would be 0.0058% (1 - 0.9942%), based on the lower of the two determined accuracies in cross validation and testing.</p>
+<p>The in sample error of 0.0% certainly raises some concerns over possible overfitting. However, a cross validation accuracy of 99.42% and a validation test accuracy of 99.78% is strong evidence for low out of sample error. A reasonable conservative estimate for out of sample error would be 0.58% (1 - 0.9942), based on the lower of the two determined accuracies in cross validation and testing.</p>
 </div>
 
 
